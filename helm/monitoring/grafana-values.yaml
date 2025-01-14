@@ -1,0 +1,59 @@
+# grafana-values.yaml
+
+# Admin credentials
+adminUser: admin
+adminPassword: admin # Update this for production
+
+# Service configuration
+service:
+  type: LoadBalancer
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3000"
+
+
+# Ingress configuration
+ingress:
+  enabled: false # Disable ingress since you don't have a domain
+  # enabled: true
+  # annotations:
+  #   kubernetes.io/ingress.class: nginx
+  # hosts:
+  #   - grafana.example.com # Replace with your domain or external IP
+  # tls:
+  #   - secretName: grafana-tls
+  #     hosts:
+  #       - grafana.example.com
+
+# Persistent storage
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClassName: gp2
+  accessModes:
+    - ReadWriteOnce
+
+# Pre-configured datasource
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-server.monitoring.svc.cluster.local:9090
+        isDefault: true
+
+# Resource requests and limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+# Node affinity and tolerations
+nodeSelector: {}
+tolerations: []
+affinity: {}

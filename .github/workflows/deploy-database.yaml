@@ -1,0 +1,44 @@
+name: Deploy MySQL Database
+
+on:
+  push:
+    paths:
+      - 'kubernetes/database/**'
+      - '.github/workflows/mysql-deployment.yaml'
+      - '.github/workflows/mysql-service.yaml'
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+        id-token: write
+        contents: read
+        pull-requests: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+  
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+  
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Deploy MySQL Database
+        run: |
+          kubectl apply -f kubernetes/database/mysql-deployment.yaml
+          kubectl apply -f kubernetes/database/mysql-service.yaml

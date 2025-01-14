@@ -1,0 +1,53 @@
+name: Deploy Monitoring Stack
+
+on:
+  push:
+    paths:
+      - 'helm/monitoring/**'
+      - '.github/workflows/deploy-monitoring.yml'
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+        id-token: write
+        contents: read
+        pull-requests: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+  
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+  
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Deploy Prometheus and Grafana
+        run: |
+            helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+            helm repo add grafana https://grafana.github.io/helm-charts
+            helm repo update
+            helm upgrade --install prometheus prometheus-community/prometheus \
+                --namespace monitoring \
+                --create-namespace \
+                --values kubernetes/monitoring/prometheus-values.yaml
+            helm upgrade --install grafana grafana/grafana \
+                --namespace monitoring \
+                --create-namespace \
+                --values kubernetes/monitoring/grafana-values.yaml
