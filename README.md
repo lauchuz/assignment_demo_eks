@@ -15,6 +15,7 @@ This guide provides step-by-step instructions to deploy and manage an EKS cluste
 7. [CI/CD Pipeline](#cicd-pipeline)
 8. [Folder Structure](#folder-structure)
 9. [Troubleshooting Index](#troubleshooting-index)
+10. [Challenges](#challenges)
 ---
 
 ## Prerequisites
@@ -425,6 +426,25 @@ If the setup is correct, the IAM role will successfully perform Kubernetes opera
 By following these steps, the GitHub Actions IAM role will have the necessary permissions to interact with the Kubernetes cluster, ensuring a seamless CI/CD process.
 
 
+## Challenges
+
+### GitHub Actions IAM Role Issue
+
+The kubectl get nodes command weren't working and would receive errors such as "You must be logged in to the server (Unauthorized) " and updating the kubeconfig made no change. The solution and troubleshooting steps for this is in the troubleshooting index.
+
+Additionally the OIDC in the github actions also had this issue:
+`Error: Could not assume role with OIDC: Not authorized to perform sts:AssumeRoleWithWebIdentity`
+
+Where none of these solutions related to it worked as it looked like a misconfiguration:
+https://github.com/aws-actions/configure-aws-credentials/issues/318
+https://github.com/aws-actions/configure-aws-credentials/issues/1137
+https://github.com/aws-actions/configure-aws-credentials/issues/1238
+
+The solution for this issues after was just deleting and creating the OIDC in the AWS console.
+
+### Prometheus Deployment Issue
+
+Another challenge faced was the initial prometheus deployment had the server pod stuck in pending.From further investigation there were no nodes available and another error in the logs mentioned it could not find a proper storage/volume. I manually created the EBS CSI Driver and iam role (both the ebs driver and role can be provisioned and managed in terraform) along with the troubleshooting steps to resolve this issue which can also be found in the index.
 
 ## Conclusion
 
