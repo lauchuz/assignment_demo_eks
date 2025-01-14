@@ -56,4 +56,4 @@ resources:
 # Node affinity and tolerations
 nodeSelector: {}
 tolerations: []
-affinity: {} #affinity
+affinity: {}
